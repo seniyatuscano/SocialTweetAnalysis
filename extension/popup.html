@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Tweet Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-light: #f8f7ff;
+      --bg-dark: #0f0f12;
+      --surface-light: #ffffff;
+      --surface-dark: #18181c;
+      --text-light: #1a1a1a;
+      --text-dark: #f4f4f5;
+      --text-muted-light: #737373;
+      --text-muted-dark: #a1a1aa;
+      --border-light: #e5e5e5;
+      --border-dark: #2a2a2e;
+      --accent: #7c3aed;
+      --accent-hover: #a855f7;
+    }
+
+    body {
+      width: 340px;
+      min-height: 500px;
+      max-height: 600px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      overflow-y: auto;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    body::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border-radius: 3px;
+    }
+
+    body.dark-mode::-webkit-scrollbar-thumb {
+      background: var(--border-dark);
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .logo.compact {
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      border-radius: 8px;
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-light);
+      transition: color 0.3s ease;
+    }
+
+    body.dark-mode .brand-name {
+      color: var(--text-dark);
+    }
+
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      background: var(--surface-light);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 1px solid var(--border-light);
+      transition: all 0.3s ease;
+      font-size: 18px;
+    }
+
+    body.dark-mode .theme-toggle {
+      background: var(--surface-dark);
+      border-color: var(--border-dark);
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.05);
+      border-color: var(--accent);
+    }
+
+    /* Loading State */
+    .state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .state.hidden {
+      display: none;
+    }
+
+    .loading-icon {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 42px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.9; }
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: var(--text-muted-light);
+      font-weight: 500;
+    }
+
+    body.dark-mode .loading-text {
+      color: var(--text-muted-dark);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border-light);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    body.dark-mode .spinner {
+      border-color: var(--border-dark);
+      border-top-color: var(--accent);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-text {
+      color: #ef4444;
+      font-size: 14px;
+    }
+
+    /* Results Container */
+    #state-result {
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Vibe Summary Section */
+    .section {
+      background: var(--surface-light);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    body.dark-mode .section {
+      background: var(--surface-dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-light);
+      margin-bottom: 16px;
+    }
+
+    body.dark-mode .section-title {
+      color: var(--text-dark);
+    }
+
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bullet-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-muted-light);
+    }
+
+    body.dark-mode .bullet-list li {
+      color: var(--text-muted-dark);
+    }
+
+    .bullet-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* Top Tweets Section */
+    .tweets-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .tweets-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+
+    body.dark-mode .tweets-title {
+      color: var(--text-dark);
+    }
+
+    .high-reach-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(124, 58, 237, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tweet-card {
+      background: var(--surface-light);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    body.dark-mode .tweet-card {
+      background: var(--surface-dark);
+      border-color: var(--border-dark);
+    }
+
+    .tweet-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .tweet-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tweet-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--border-light);
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    body.dark-mode .tweet-avatar {
+      background: var(--border-dark);
+    }
+
+    .tweet-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tweet-user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    body.dark-mode .tweet-user-name {
+      color: var(--text-dark);
+    }
+
+    .verified-badge {
+      font-size: 13px;
+    }
+
+    .tweet-username {
+      font-size: 12px;
+      color: var(--text-muted-light);
+    }
+
+    body.dark-mode .tweet-username {
+      color: var(--text-muted-dark);
+    }
+
+    .tweet-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-light);
+      margin-bottom: 10px;
+    }
+
+    body.dark-mode .tweet-text {
+      color: var(--text-dark);
+    }
+
+    .tweet-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-muted-light);
+    }
+
+    body.dark-mode .tweet-stats {
+      color: var(--text-muted-dark);
+    }
+
+    .tweet-stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="logo" id="logo">🔮</div>
+        <div class="brand-name">Social Tweet Analysis</div>
+      </div>
+      <div class="theme-toggle" id="theme-toggle">🌙</div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="state-loading" class="state">
+      <div class="loading-icon">🤖</div>
+      <p class="loading-text">Analyzing social conversations...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="state-error" class="state hidden">
+      <p class="error-text" id="error-message">Something went wrong.</p>
+    </div>
+
+    <!-- Results -->
+    <div id="state-result" class="hidden">
+      <!-- Vibe Summary -->
+      <div class="section">
+        <div class="section-title">
+          <span>✨</span>
+          <span>Vibe Summary</span>
+        </div>
+        <ul class="bullet-list" id="bullet-list"></ul>
+      </div>
+
+      <!-- Top Tweets -->
+      <div class="tweets-header">
+        <div class="tweets-title">Top Tweets</div>
+        <div class="high-reach-badge">HIGH REACH</div>
+      </div>
+      <div id="tweets-container"></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

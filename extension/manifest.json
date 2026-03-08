@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Social Tweet Analysis",
+  "version": "1.0.0",
+  "description": "Analyze the vibe of any URL using Twitter and Gemini.",
+  "permissions": ["activeTab", "tabs", "storage"],
+  "host_permissions": ["http://127.0.0.1:8000/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Social Tweet Analysis",
+    "default_icon": "icon48.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "48": "icon48.png"
+  }
+}

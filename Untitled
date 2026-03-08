@@ -1,0 +1,13 @@
+# Python environments & caches
+__pycache__/
+*.pyc
+venv/
+env/
+.venv/
+
+# Secrets and Configs (CRITICAL)
+backend/.env
+backend/cookies.json
+
+# OS generated files
+.DS_Store
